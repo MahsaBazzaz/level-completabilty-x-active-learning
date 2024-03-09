@@ -1,14 +1,3 @@
-@INPROCEEDINGS{10333212,
-  author={Bazzaz, Mahsa and Cooper, Seth},
-  booktitle={2023 IEEE Conference on Games
-  title={Active Learning for Classifying 2D Grid-Based Level Completability}, 
-  year={2023},
-  volume={},
-  number={},
-  pages={1-4},
-  keywords={Computer vision;Uncertainty;Games;Speech recognition;Machine learning;Sampling methods;Natural language processing;video games;active learning;completability},
-doi={10.1109/CoG57401.2023.10333212}}
-
 cff-version: 1.2.0
 message: "If you use this software, please cite it as below."
 authors:
