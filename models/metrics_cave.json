@@ -1,1 +1,0 @@
-{"accuracy": 0.9000713775874375, "num_epochs": 100, "learning_rate": 0.0001, "batch_size": 32, "criterion": "BCE LOSS", "optimizer": "RMSprop", "timestamp": "20240308221845"}

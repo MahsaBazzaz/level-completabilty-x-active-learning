@@ -39,20 +39,14 @@ def random_query_strategy(classifier, X, n_instances=1):
     # Return the first n_instances instances from the shuffled indices
     return indices[:n_instances]
 
-def train_active(X_full, y_full, n_initial, strategy, n_queries, n_instances = 1):
+def train_active(idx, x_train, x_test, y_train, y_test, n_initial, strategy, cols, rows, channels, max_accuracy, device, n_instances = 1):
     count = 0
-    x_train, x_test, y_train, y_test = train_test_split(X_full, y_full, train_size=0.80)
     initial_idx = np.random.choice(range(len(x_train)), size=n_initial, replace=False)
     X_ini, y_ini = x_train[initial_idx].numpy(), y_train[initial_idx]
-    # pdb.set_trace()
     y_ini = torch.tensor(y_ini, dtype=torch.float32).numpy()
-    # cols, rows, channels
-    # X_full[0].shape
     classifier = NeuralNetClassifier(Model(cols, rows, channels),
                                         criterion=nn.BCELoss,
-                                        # criterion=nn.CrossEntropyLoss,
                                         optimizer=torch.optim.Adam,
-                                        # optimizer__weight_decay=0.001,
                                         train_split=None,
                                         optimizer__lr = 0.0001,
                                         verbose=0,
@@ -68,14 +62,12 @@ def train_active(X_full, y_full, n_initial, strategy, n_queries, n_instances = 1
     performance_history = [unqueried_score]
     x_axis = []
     x_axis.append(count)
-    save(performance_history, x_axis, count)
+    save(idx, performance_history, x_axis, count)
 
-    # for idx in range(n_queries):
-    while (abs(performance_history[-1] - (max_accuracy)) >= 0.01) and count<=200:
+    while (abs(performance_history[-1] - (max_accuracy)) >= 0.1):
 
         query_index, query_instace = learner.query(x_train, n_instances = n_instances)
         X, y = x_train[query_index], y_train[query_index]
-        # y = torch.tensor(y, dtype=torch.float32).unsqueeze(1).numpy()
         y = torch.tensor(y, dtype=torch.float32).numpy()
         learner.teach(X=X.numpy(), y=y)
         count+= n_instances
@@ -85,49 +77,50 @@ def train_active(X_full, y_full, n_initial, strategy, n_queries, n_instances = 1
 
         model_accuracy = learner.score(x_test, np.argmax(y_test, axis=1))
         performance_history.append(model_accuracy)
-        save(performance_history, x_axis, count)
+        save(idx, performance_history, x_axis, count)
 
     return (performance_history, x_axis)
 
-def save(accuracy, x_axis, count, passive_accuracy=None):
-    # Load existing data
+def save(idx, accuracy, x_axis, count, passive_accuracy=None):
     try:
-        with open(folder + '/report_' + game + '.json', 'r') as json_file:
+        with open('models/report_' + game + '_' + criteria + '.json', 'r') as json_file:
             data = json.load(json_file)
     except FileNotFoundError:
-        data = []
+        data = {}
 
-    # Add new data to the existing array
-    data.append({
-        "accuracy": accuracy,
-        "count": count,
-        "x_axis": x_axis,
-        "timestamp": datetime.now().strftime("%Y%m%d%H%M%S"),
-        "active_accuracy" : passive_accuracy
-    })
+    if idx in data:
+        data[idx].append({
+            "accuracy": accuracy,
+            "count": count,
+            "x_axis": x_axis,
+            "timestamp": datetime.now().strftime("%Y%m%d%H%M%S"),
+            "active_accuracy": passive_accuracy
+        })
+    else:
+        data[idx] = [{
+            "accuracy": accuracy,
+            "count": count,
+            "x_axis": x_axis,
+            "timestamp": datetime.now().strftime("%Y%m%d%H%M%S"),
+            "active_accuracy": passive_accuracy
+        }]
 
-    # Save the updated array to the file
-    with open(folder + '/report_' + game + '_' + idx + '.json', 'w') as json_file:
-        json.dump(data, json_file, indent=2)
+    with open('models/report_' + game + '_' + criteria + '.json', 'w') as json_file:
+        json.dump(data, json_file, indent=4)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Train Resnet classifier')
 
     parser.add_argument('--game', required=True, type=str)
-    parser.add_argument('--idx', required=True, type=str)
     parser.add_argument('--criteria', required=True, type=str, help='random_query_strategy, margin_sampling, entropy_sampling, uncertainty_sampling')
     parser.add_argument('--n_ini', required=True, type=int)
     parser.add_argument('--n_instances', required=False, type=int)
-    parser.add_argument('--n_query', required=False, type=int)
 
     args = parser.parse_args()
     game = args.game
-    idx = args.idx
-    folder = 'models'
     criteria = args.criteria
     n_ini = args.n_ini
     n_instances = args.n_instances
-    n_query = args.n_query
 
     if game == "cave":
         cols = CAVE_COLS
@@ -158,9 +151,7 @@ if __name__ == '__main__':
         lr = 0.0001
         model = Model(cols, rows, channels)
         criterion = nn.BCELoss()
-        # criterion = nn.CrossEntropyLoss()
         optimizer = torch.optim.Adam(model.parameters(), lr=lr) 
-        # optim.RMSprop(model.parameters(), lr=lr)
         num_epochs = 100
         batch_size = 32
         max_accuracy = train_passive(model, optimizer, criterion, num_epochs, x_train, y_train, x_test, y_test, batch_size, game, lr)
@@ -173,17 +164,39 @@ if __name__ == '__main__':
         strategy = uncertainty_sampling
     elif criteria == 'entropy':
         strategy = entropy_sampling
-    performance_history, x_axis = train_active(X_full, y_full, n_ini, strategy, n_query, n_instances)
+    
+    # Split the data into k folds
+    k = 5
+    X_folds = torch.chunk(X_full, k)
+    y_folds = torch.chunk(y_full, k)
+    performance_histories = []
+    x_axiss = []
+    for i in range(k):
+        # Prepare training and testing data
+        X_test = X_folds[i]
+        y_test = y_folds[i]
+
+        # Concatenate all folds except the test fold
+        X_train = torch.cat(X_folds[:i] + X_folds[i+1:], dim=0)
+        y_train = torch.cat(y_folds[:i] + y_folds[i+1:], dim=0)
+
+        # x_train, x_test, y_train, y_test = train_test_split(X_full, y_full, train_size=0.80)
+        performance_history, x_axis = train_active(i, X_train, X_test, y_train, y_test, n_ini, strategy, cols, rows, channels, max_accuracy, device, n_instances)
+        performance_histories.append(performance_history)
+        x_axiss.append(x_axis)
 
     fig, ax = plt.subplots(figsize=(8, 6))
-    ax.plot(x_axis, performance_history)
+    # ax.plot(x_axis, performance_history)
+    for i in range(len(performance_histories)):
+        plt.plot(x_axiss[i], performance_histories[i], label=f'Fold {i+1}')
     ax.scatter(x_axis, performance_history, s=13)
     ax.set_ylim(bottom=0, top=1)
-    # ax.set_xticks([x for x, y in zip(x_axis, performance_history)])
     ax.axhline(y=(max_accuracy), color='r', linestyle='--', label='Passive Learner Accuracy with N=6000')
     ax.grid(True)
-    ax.set_title('Incremental classification accuracy')
+    ax.set_title(f'Incremental classification accuracy (Initial = {n_ini}, Instances = {n_instances})')
     ax.set_xlabel('Query iteration')
     ax.set_ylabel('Classification Accuracy')
     plt.legend()
-    fig.savefig(folder + '/accuracy_' + game + '_' + idx + '.png')
+    plt.tight_layout()
+    plt.show()
+    fig.savefig('out/accuracy_' + game + '_' + criteria + '_' + n_ini + '_' + n_instances + '.png')
