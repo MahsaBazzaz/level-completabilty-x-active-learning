@@ -1,5 +1,6 @@
 message: "If you use this software, please cite it as below."
-preferred-citation: article
+preferred-citation:
+type: article
 authors:
 - family-names: "Bazzaz"
   given-names: "Mahsa"
