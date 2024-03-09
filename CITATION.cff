@@ -1,5 +1,5 @@
 message: "If you use this software, please cite it as below."
-type: conference-paper
+preferred-citation: article
 authors:
 - family-names: "Bazzaz"
   given-names: "Mahsa"
