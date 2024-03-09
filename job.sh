@@ -26,6 +26,7 @@ for game in "${games[@]}"; do
     for crit in "${criteria[@]}"; do
         echo "Game: $game, Criteria: $crit"
         command="python active_train.py --game $game --criteria $crit --n_ini 10 --n_instances 1"
+        echo $command
         $command
     done
 done

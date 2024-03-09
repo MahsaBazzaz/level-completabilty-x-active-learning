@@ -13,8 +13,6 @@ from sklearn.model_selection import train_test_split
 from constants import CAVE_CHANNELS, CAVE_COLS, CAVE_ROWS, MARIO_CHANNELS, MARIO_COLS, MARIO_ROWS, SUPERCAT_CHANNELS, SUPERCAT_COLS, SUPERCAT_ROWS
 
 def train_passive(model, optimizer, criterion, num_epochs, x_train, y_train, x_test, y_test, batch_size, game, lr):
-    
-
     # Training loop
     for epoch in range(num_epochs):
         model.train()  # Set the model to training mode
@@ -30,7 +28,7 @@ def train_passive(model, optimizer, criterion, num_epochs, x_train, y_train, x_t
 
             # Forward pass
             outputs = model(inputs)
-            loss = criterion(outputs, labels.view(-1, 1))  # BCELoss expects a column vector
+            loss = criterion(outputs, labels)
 
             # Backward pass and optimize
             loss.backward()

@@ -154,6 +154,7 @@ if __name__ == '__main__':
         optimizer = torch.optim.Adam(model.parameters(), lr=lr) 
         num_epochs = 100
         batch_size = 32
+        print("training passive learner ... ")
         max_accuracy = train_passive(model, optimizer, criterion, num_epochs, x_train, y_train, x_test, y_test, batch_size, game, lr)
 
     if criteria == 'random':
