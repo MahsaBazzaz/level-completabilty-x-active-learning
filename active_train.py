@@ -138,7 +138,7 @@ if __name__ == '__main__':
     levels, labels = get_dataset(game)
     levels = np.transpose(levels, (0, 3, 1, 2))
     X_full = torch.tensor(levels, dtype=torch.float32)
-    y_full = torch.tensor(labels,  dtype=torch.long)
+    y_full = torch.tensor(labels,  dtype=torch.float32)
 
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     try:
@@ -148,14 +148,15 @@ if __name__ == '__main__':
     except FileNotFoundError:
         print('No Passive history Found.')
         x_train, x_test, y_train, y_test = train_test_split(X_full, y_full, train_size=0.80)
-        lr = 0.0001
+        weight_decay= 1e-3
+        learning_rate = 1e-2
+        print("weight decay: ", weight_decay)
+        print("learning rate: ", learning_rate)
         model = Model(cols, rows, channels)
-        criterion = nn.BCELoss()
-        optimizer = torch.optim.Adam(model.parameters(), lr=lr) 
         num_epochs = 100
         batch_size = 32
         print("training passive learner ... ")
-        max_accuracy = train_passive(model, optimizer, criterion, num_epochs, x_train, y_train, x_test, y_test, batch_size, game, lr)
+        max_accuracy = train_passive(game, model, weight_decay, learning_rate, num_epochs, x_train, y_train, x_test, y_test)
 
     if criteria == 'random':
         strategy = random_query_strategy
@@ -166,7 +167,6 @@ if __name__ == '__main__':
     elif criteria == 'entropy':
         strategy = entropy_sampling
     
-    # Split the data into k folds
     k = 5
     X_folds = torch.chunk(X_full, k)
     y_folds = torch.chunk(y_full, k)

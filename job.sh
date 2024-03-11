@@ -20,7 +20,7 @@ module load python/3.8.1
 pip install -r requirements.txt
 #
 #
-games=("cave" "mario" "supercat")
+games=("cave" "mario" "supercat" "tomb")
 criteria=("random" "entropy" "margin" "uncertainty")
 for game in "${games[@]}"; do
     for crit in "${criteria[@]}"; do
