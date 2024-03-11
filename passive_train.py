@@ -54,11 +54,11 @@ def train_passive(model, optimizer, criterion, num_epochs, x_train, y_train, x_t
 
             # Forward pass
             outputs = model(inputs)
-            predicted = (outputs > 0.5).float()  # Convert to binary predictions
+            predicted = (outputs > 0.5).float()
 
             # Count correct predictions
             total += labels.size(0)
-            correct += (predicted == labels.view(-1, 1)).sum().item()
+            correct += (predicted == labels).sum().item()
 
     # Compute accuracy
     accuracy = correct / total
@@ -106,8 +106,10 @@ if __name__ == '__main__':
     # Define the optimizer and the learning rate
     lr = 0.0001
     model = Model(cols, rows, channels)
-    criterion = nn.BCELoss()
+    # criterion = nn.BCELoss()
     optimizer = optim.RMSprop(model.parameters(), lr=lr)
+    criterion = nn.BCELoss()
+    # optimizer = torch.optim.Adam(model.parameters(), lr=lr) 
     num_epochs = 100
     batch_size = 32
     accuracy = train_passive(model, optimizer, criterion, num_epochs, x_train, y_train, x_test, y_test, batch_size, game, lr)
