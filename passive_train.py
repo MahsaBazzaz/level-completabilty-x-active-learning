@@ -103,14 +103,14 @@ def train(model, train_dataset, train_loader, val_dataset, val_loader, criterion
     
     return val_acc
 
-def train_passive(game, model, weight_decay, learning_rate, num_epochs, x_train, y_train, x_test, y_test):
+def train_passive(game, model, weight_decay, learning_rate, num_epochs, x_train, y_train, x_test, y_test, batch_size):
     optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate, weight_decay=weight_decay)
     criterion = nn.CrossEntropyLoss()
 
     train_dataset = TensorDataset(x_train, y_train)
-    train_loader = DataLoader(train_dataset, batch_size=32, shuffle=True)
+    train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
     val_dataset = TensorDataset(x_test, y_test)
-    val_loader = DataLoader(val_dataset, batch_size=32, shuffle=False)
+    val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False)
     
     # Fine-tune the last layer for a few epochs
     train(model, train_dataset, train_loader, val_dataset, val_loader, criterion, optimizer, num_epochs)
@@ -124,9 +124,10 @@ def train_passive(game, model, weight_decay, learning_rate, num_epochs, x_train,
     torch.save(model.state_dict(), model_name)
     with open('models/metrics_' + game + '.json', "w") as json_file:
         json.dump({
-                    "accuracy": accuracy,
+                    "accuracy": accuracy * 100,
                     "num_epochs" : num_epochs,
-                    "learning_rate" : lr,
+                    "learning_rate" : learning_rate,
+                    "weight_decay" : weight_decay,
                     "batch_size" : batch_size,
                     "criterion" : "CrossEntropyLoss",
                     "optimizer" : "Adam",

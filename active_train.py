@@ -57,7 +57,7 @@ def train_active(idx, x_train, x_test, y_train, y_test, n_initial, strategy, col
     learner = ActiveLearner(estimator=classifier,X_training=X_ini, y_training=y_ini,
                              query_strategy=strategy)
     log('learner initiated', 'green')
-    unqueried_score = learner.score(x_test, np.argmax(y_test, axis=1))
+    unqueried_score = learner.score(x_test, y_test)
     log('initial score' + str(unqueried_score), 'green')
     performance_history = [unqueried_score]
     x_axis = []
@@ -66,16 +66,18 @@ def train_active(idx, x_train, x_test, y_train, y_test, n_initial, strategy, col
 
     while (abs(performance_history[-1] - (max_accuracy)) >= 0.1):
 
-        query_index, query_instace = learner.query(x_train, n_instances = n_instances)
-        X, y = x_train[query_index], y_train[query_index]
-        y = torch.tensor(y, dtype=torch.float32).numpy()
-        learner.teach(X=X.numpy(), y=y)
+        query_index, query_instace = learner.query(x_train)
+        id = query_index[0][0]
+        X, y = x_train[id], y_train[id]
+        X =  np.expand_dims(X.numpy(), axis=0)
+        y = np.expand_dims(torch.tensor(y, dtype=torch.float32).numpy(), axis=0)
+        learner.teach(X=X, y=y)
         count+= n_instances
         x_axis.append(count)
         x_train = np.delete(x_train, query_index, axis=0)
         y_train = np.delete(y_train, query_index, axis=0)
 
-        model_accuracy = learner.score(x_test, np.argmax(y_test, axis=1))
+        model_accuracy = learner.score(x_test, y_test)
         performance_history.append(model_accuracy)
         save(idx, performance_history, x_axis, count)
 
@@ -156,7 +158,7 @@ if __name__ == '__main__':
         num_epochs = 100
         batch_size = 32
         print("training passive learner ... ")
-        max_accuracy = train_passive(game, model, weight_decay, learning_rate, num_epochs, x_train, y_train, x_test, y_test)
+        max_accuracy = train_passive(game, model, weight_decay, learning_rate, num_epochs, x_train, y_train, x_test, y_test, batch_size)
 
     if criteria == 'random':
         strategy = random_query_strategy
