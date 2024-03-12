@@ -65,14 +65,14 @@ def train_active(idx, x_train, x_test, y_train, y_test, n_initial, strategy, col
     save(idx, performance_history, x_axis, count)
 
     while (performance_history[-1]*100 < max_accuracy - 0.5 or not (performance_history[-1]*100 > max_accuracy)) and count<=3000:
-        print(" Querying...")
+        # print(" Querying...")
         query_index, query_instace = learner.query(x_train)
         id = query_index[0][0]
         X, y = x_train[id], y_train[id]
         X =  np.expand_dims(X.numpy(), axis=0)
         y = np.expand_dims(torch.tensor(y, dtype=torch.float32).numpy(), axis=0)
         learner.teach(X=X, y=y)
-        print("Teaching...")
+        # print("Teaching...")
         count+= n_instances
         print("Learned ", count, "Instances so far.")
         x_axis.append(count)

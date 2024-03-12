@@ -18,18 +18,28 @@
 module load anaconda3/2022.05
 module load python/3.8.1
 pip install -r requirements.txt
+
+if [ "$#" -ne 2 ]; then
+  echo "Usage: $0 <parameter1> <parameter2>"
+  exit 1
+fi
+game=$1
+crit=$2
+command="python active_train.py --game $game --criteria $crit --n_ini 10 --n_instances 1"
+echo $command
+$command
 #
 #
-games=("cave" "mario" "supercat" "tomb")
-criteria=("random" "entropy" "margin" "uncertainty")
-for game in "${games[@]}"; do
-    for crit in "${criteria[@]}"; do
-        echo "Game: $game, Criteria: $crit"
-        command="python active_train.py --game $game --criteria $crit --n_ini 10 --n_instances 1"
-        echo $command
-        $command
-    done
-done
+# games=("cave" "mario" "supercat" "tomb")
+# criteria=("random" "entropy" "margin" "uncertainty")
+# for game in "${games[@]}"; do
+#     for crit in "${criteria[@]}"; do
+#         echo "Game: $game, Criteria: $crit"
+#         command="python active_train.py --game $game --criteria $crit --n_ini 10 --n_instances 1"
+#         echo $command
+#         $command
+#     done
+# done
 
 
 
