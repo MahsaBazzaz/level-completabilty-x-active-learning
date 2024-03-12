@@ -4,7 +4,7 @@ import pdb
 from classifier import Model
 from logger import log
 from passive_train import train_passive
-from constants import CAVE_CHANNELS, CAVE_COLS, CAVE_ROWS, MARIO_CHANNELS, MARIO_COLS, MARIO_ROWS, SUPERCAT_CHANNELS, SUPERCAT_COLS, SUPERCAT_ROWS
+from constants import CAVE_CHANNELS, CAVE_COLS, CAVE_ROWS, MARIO_CHANNELS, MARIO_COLS, MARIO_ROWS, SUPERCAT_CHANNELS, SUPERCAT_COLS, SUPERCAT_ROWS, TOMB_CHANNELS, TOMB_COLS, TOMB_ROWS
 
 import matplotlib.pyplot as plt
 
@@ -139,6 +139,10 @@ if __name__ == '__main__':
         cols = SUPERCAT_COLS
         rows = SUPERCAT_ROWS
         channels = SUPERCAT_CHANNELS
+    elif game == 'tomb':
+        cols = TOMB_COLS
+        rows = TOMB_ROWS
+        channels = TOMB_CHANNELS
 
     levels, labels = get_dataset(game)
     levels = np.transpose(levels, (0, 3, 1, 2))
