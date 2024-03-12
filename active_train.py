@@ -67,7 +67,10 @@ def train_active(idx, x_train, x_test, y_train, y_test, n_initial, strategy, col
     while (performance_history[-1]*100 < max_accuracy - 0.5 or not (performance_history[-1]*100 > max_accuracy)) and count<=3000:
         # print(" Querying...")
         query_index, query_instace = learner.query(x_train)
-        id = query_index[0][0]
+        if criteria == 'random':
+            id = query_index[0]
+        else:
+            id = query_index[0][0]
         X, y = x_train[id], y_train[id]
         X =  np.expand_dims(X.numpy(), axis=0)
         y = np.expand_dims(torch.tensor(y, dtype=torch.float32).numpy(), axis=0)
