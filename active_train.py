@@ -64,20 +64,23 @@ def train_active(idx, x_train, x_test, y_train, y_test, n_initial, strategy, col
     x_axis.append(count)
     save(idx, performance_history, x_axis, count)
 
-    while (abs(performance_history[-1] - (max_accuracy)) >= 0.1):
-
+    while (performance_history[-1]*100 < max_accuracy - 0.5 or not (performance_history[-1]*100 > max_accuracy)) and count<=3000:
+        print(" Querying...")
         query_index, query_instace = learner.query(x_train)
         id = query_index[0][0]
         X, y = x_train[id], y_train[id]
         X =  np.expand_dims(X.numpy(), axis=0)
         y = np.expand_dims(torch.tensor(y, dtype=torch.float32).numpy(), axis=0)
         learner.teach(X=X, y=y)
+        print("Teaching...")
         count+= n_instances
+        print("Learned ", count, "Instances so far.")
         x_axis.append(count)
         x_train = np.delete(x_train, query_index, axis=0)
         y_train = np.delete(y_train, query_index, axis=0)
 
         model_accuracy = learner.score(x_test, y_test)
+        print("Perfromance is ", model_accuracy)
         performance_history.append(model_accuracy)
         save(idx, performance_history, x_axis, count)
 
@@ -150,12 +153,12 @@ if __name__ == '__main__':
     except FileNotFoundError:
         print('No Passive history Found.')
         x_train, x_test, y_train, y_test = train_test_split(X_full, y_full, train_size=0.80)
-        weight_decay= 1e-3
-        learning_rate = 1e-2
+        learning_rate = 0.0001
+        weight_decay = 0.01
         print("weight decay: ", weight_decay)
         print("learning rate: ", learning_rate)
         model = Model(cols, rows, channels)
-        num_epochs = 100
+        num_epochs = 50
         batch_size = 32
         print("training passive learner ... ")
         max_accuracy = train_passive(game, model, weight_decay, learning_rate, num_epochs, x_train, y_train, x_test, y_test, batch_size)
@@ -201,5 +204,4 @@ if __name__ == '__main__':
     ax.set_ylabel('Classification Accuracy')
     plt.legend()
     plt.tight_layout()
-    plt.show()
-    fig.savefig('out/accuracy_' + game + '_' + criteria + '_' + n_ini + '_' + n_instances + '.png')
+    fig.savefig('out/accuracy_' + game + '_' + criteria + '_' + str(n_ini) + '_' + str(n_instances) + '.png')

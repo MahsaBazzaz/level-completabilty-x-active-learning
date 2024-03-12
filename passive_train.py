@@ -103,6 +103,58 @@ def train(model, train_dataset, train_loader, val_dataset, val_loader, criterion
     
     return val_acc
 
+def train_2(model, x_train, y_train, x_test, y_test, batch_size, criterion, optimizer, num_epochs, device=torch.device('cuda' if torch.cuda.is_available() else 'cpu')):
+    # Training loop
+    for epoch in range(num_epochs):
+        model.train()  # Set the model to training mode
+        running_loss = 0.0
+
+        # Iterate over batches of data
+        for i in range(0, len(x_train), batch_size):
+            inputs = torch.tensor(x_train[i:i+batch_size], dtype=torch.float32)
+            labels = torch.tensor(y_train[i:i+batch_size], dtype=torch.float32)
+
+            # Zero the parameter gradients
+            optimizer.zero_grad()
+
+            # Forward pass
+            outputs = model(inputs)
+            loss = criterion(outputs, labels)  # Using CrossEntropyLoss with one-hot labels
+
+            # Backward pass and optimize
+            loss.backward()
+            optimizer.step()
+
+            # Print statistics
+            running_loss += loss.item() * inputs.size(0)
+
+        # Print epoch statistics
+        epoch_loss = running_loss / len(x_train)
+        print(f"Epoch [{epoch+1}/{num_epochs}], Loss: {epoch_loss:.4f}")
+
+    print('Finished Training')
+    model.eval()  # Set the model to evaluation mode
+    correct = 0
+    total = 0
+
+    # Disable gradient computation during evaluation
+    with torch.no_grad():
+        for i in range(0, len(x_test), batch_size):
+            inputs = torch.tensor(x_test[i:i+batch_size], dtype=torch.float32)
+            labels = torch.tensor(y_test[i:i+batch_size], dtype=torch.float32)
+
+            # Forward pass
+            outputs = model(inputs)
+            _, predicted = torch.max(outputs, 1)  # Convert to binary predictions
+
+            # Count correct predictions
+            total += labels.size(0)
+            correct += (predicted == torch.argmax(labels, 1)).sum().item()
+
+    # Compute accuracy
+    accuracy = correct / total
+    return accuracy
+
 def train_passive(game, model, weight_decay, learning_rate, num_epochs, x_train, y_train, x_test, y_test, batch_size):
     optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate, weight_decay=weight_decay)
     criterion = nn.CrossEntropyLoss()
@@ -119,7 +171,8 @@ def train_passive(game, model, weight_decay, learning_rate, num_epochs, x_train,
     for param in model.parameters():
         param.requires_grad = True
     optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate, weight_decay=weight_decay)
-    accuracy = train(model, train_dataset, train_loader, val_dataset, val_loader, criterion, optimizer, num_epochs) 
+    # accuracy = train(model, train_dataset, train_loader, val_dataset, val_loader, criterion, optimizer, num_epochs) 
+    accuracy = train_2(model, x_train, y_train, x_test, y_test, batch_size, criterion, optimizer, num_epochs) 
     model_name = "./models/" + game + "_" + 'generic_classifier_py' + ".pth"
     torch.save(model.state_dict(), model_name)
     with open('models/metrics_' + game + '.json', "w") as json_file:
