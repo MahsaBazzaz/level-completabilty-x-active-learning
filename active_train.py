@@ -8,6 +8,7 @@ from constants import CAVE_CHANNELS, CAVE_COLS, CAVE_ROWS, MARIO_CHANNELS, MARIO
 
 import matplotlib.pyplot as plt
 
+from timer import timer_start, write_time
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -184,6 +185,7 @@ if __name__ == '__main__':
     y_folds = torch.chunk(y_full, k)
     performance_histories = []
     x_axiss = []
+    timer_start()
     for i in range(k):
         # Prepare training and testing data
         X_test = X_folds[i]
@@ -197,7 +199,7 @@ if __name__ == '__main__':
         performance_history, x_axis = train_active(i, X_train, X_test, y_train, y_test, n_ini, strategy, cols, rows, channels, max_accuracy, device, n_instances)
         performance_histories.append(performance_history)
         x_axiss.append(x_axis)
-
+    write_time("")
     fig, ax = plt.subplots(figsize=(8, 6))
     # ax.plot(x_axis, performance_history)
     for i in range(len(performance_histories)):
