@@ -27,7 +27,7 @@ game=$1
 crit=$2
 command="python active_train.py --game $game --criteria $crit --n_ini 10 --n_instances 1"
 echo $command
-$command > logs/$crit_$game.txt
+$command > logs/$crit-$game.txt
 #
 #
 # games=("cave" "mario" "supercat" "tomb")
