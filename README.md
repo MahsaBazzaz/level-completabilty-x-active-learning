@@ -22,6 +22,7 @@ Game: Mario
 | Entropy     | 8546.22     |
 | Margin      | 7844.88     |
 | Uncertainty | 8271.34     |
+
 Game: Supercat
 | Method      | Time (s)    |
 | ----------- | ----------- |
@@ -29,6 +30,7 @@ Game: Supercat
 | Entropy     | 6453.80     |
 | Margin      | 41493.29    |
 | Uncertainty | 40092.55    |
+
 Game: Cave
 | Method      | Time (s)    |
 | ----------- | ----------- |
@@ -36,6 +38,7 @@ Game: Cave
 | Entropy     | 1242.09     |
 | Margin      | 4238.02     |
 | Uncertainty | 3101.18     |
+
 Game: Tomb
 | Method      | Time (s)    |
 | ----------- | ----------- |
