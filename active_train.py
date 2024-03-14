@@ -65,7 +65,7 @@ def train_active(idx, x_train, x_test, y_train, y_test, n_initial, strategy, col
     x_axis.append(count)
     save(idx, performance_history, x_axis, count)
 
-    while (performance_history[-1]*100 < max_accuracy - 0.5 or not (performance_history[-1]*100 > max_accuracy)) and count<=3000:
+    while (performance_history[-1]*100 <= max_accuracy - 0.5 or not (performance_history[-1]*100 >= max_accuracy)) and count<=3000:
         # print(" Querying...")
         query_index, query_instace = learner.query(x_train)
         if criteria == 'random':
@@ -122,8 +122,8 @@ if __name__ == '__main__':
 
     parser.add_argument('--game', required=True, type=str)
     parser.add_argument('--criteria', required=True, type=str, help='random_query_strategy, margin_sampling, entropy_sampling, uncertainty_sampling')
-    parser.add_argument('--n_ini', required=True, type=int)
-    parser.add_argument('--n_instances', required=False, type=int)
+    parser.add_argument('--n_ini', required=False, type=int, default=10)
+    parser.add_argument('--n_instances', required=False, type=int, default=1)
 
     args = parser.parse_args()
     game = args.game

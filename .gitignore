@@ -3,3 +3,4 @@ Pipfile.Lock
 __pycache__/
 models/
 out/
+logs/
