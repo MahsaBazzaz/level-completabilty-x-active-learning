@@ -4,6 +4,7 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
 import json
+from scipy.interpolate import interp1d
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Train Resnet classifier')
@@ -56,37 +57,56 @@ if __name__ == '__main__':
 
     else:
         methods = ["random", "margin", "uncertainty", "entropy"]
-        avg_accuracies = []
-        x_axis_combined = None
+        colors = ['r', 'g', 'b', 'c']
+        # Define bin edges for x
 
         # Step 1: Calculate average accuracy for each fold
-        for m in methods:
-                with open(folder + '/report_' + game + '_' + m +  '.json', 'r') as json_file:
-                    data = json.load(json_file)
-                    # y.append(data[-1]["accuracy"]) 
-                    # x.append(data[-1]["x_axis"])
-                    for fold_data in data.values():
-                        accuracy = fold_data[0]["accuracy"]
-                        count = fold_data[0]["count"]
-                        x_axis = fold_data[0]["x_axis"]
-                        avg_accuracy = [sum(acc) / count for acc in zip(*[accuracy])]
-                        avg_accuracies.append(avg_accuracy)
-                        if x_axis_combined is None:
-                            x_axis_combined = np.array(x_axis)
-                        else:
-                            x_axis_combined = np.maximum(x_axis_combined, np.array(x_axis))
+        for m, color in zip(methods, colors):
+            with open(folder + '/report_' + game + '_' + m + '.json', 'r') as json_file:
+                data = json.load(json_file)
 
-                    # Step 2: Combine the average accuracies of all folds
-                    combined_avg_accuracy = np.zeros(len(x_axis_combined))
-                    for avg_accuracy in avg_accuracies:
-                        combined_avg_accuracy[:len(avg_accuracy)] += np.array(avg_accuracy)
+                # Prepare dictionaries to store total x-axis values and counts for each accuracy
+                total_x_axis = {}
+                counts = {}
 
-                    combined_avg_accuracy /= len(avg_accuracies)
+                # Calculate total x-axis values and counts for each accuracy across all folds
+                for fold_data in data.values():
+                    for entry in fold_data:
+                        for idx, acc in enumerate(entry['accuracy']):
+                            if acc not in total_x_axis:
+                                total_x_axis[acc] = entry['x_axis'][idx]
+                                counts[acc] = 1
+                            else:
+                                total_x_axis[acc] += entry['x_axis'][idx]
+                                counts[acc] += 1
 
-                    # Step 3: Plot the combined average accuracies against the cumulative number of queries
-                    plt.plot(x_axis_combined, combined_avg_accuracy, marker='o')
-                    plt.xlabel('Number of Queries')
-                    plt.ylabel('Average Accuracy')
-                    plt.title('Average Accuracy vs Number of Queries')
-                    plt.grid(True)
-                    plt.show()
+                # Calculate average x-axis for each accuracy
+                avg_x_axis = {acc: total_x_axis[acc] / counts[acc] for acc in total_x_axis}
+
+                # Sort the accuracies for plotting
+                sorted_accs = sorted(avg_x_axis.keys())
+
+                for avg_x, acc in zip(avg_x_axis.values(), sorted_accs):
+                    plt.plot(avg_x, acc, color + 'o')
+                # plt.plot(list(avg_x_axis.values()), sorted_accs, color + '-', label=m, alpha=0.5)
+                plt.plot(0, 0, color + '-', label=m, alpha=0.5)
+
+                # Create interpolation function
+                # interp_func = interp1d(list(avg_x_axis.values()), sorted_accs, kind='nearest')  # kind='linear' for linear interpolation
+                # x_new = np.linspace(min(list(avg_x_axis.values())), max(list(avg_x_axis.values())), 100)
+                # y_new = interp_func(x_new)
+                # plt.plot(x_new, y_new, color + '-', label=m, alpha=0.5)
+
+                # swap
+                # for avg_x, acc in zip(avg_x_axis.values(), sorted_accs):
+                #     plt.plot(acc, avg_x, color + 'o')
+                # plt.plot(sorted_accs, list(avg_x_axis.values()), color + '-', label=m, alpha=0.5)
+
+# Plotting
+plt.xlabel('Average Query Number between Folds')
+plt.xlim(0, 60)
+plt.ylabel('Accuracy')
+plt.title(f'Average Query Number for Each Method in {game}')
+plt.legend()
+plt.grid(True)
+plt.show()
